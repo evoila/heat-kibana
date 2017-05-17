@@ -1,0 +1,90 @@
+heat_template_version: 2015-04-30
+description: Installs Kibana
+
+parameters:
+
+  server_map:
+    type: json
+    description: Map of servers to be used with OS::Heat::SoftwareDeploymentGroup
+
+  http_proxy:
+    type: string
+    description: "HTTP proxy URL"
+    default: ''
+
+  https_proxy:
+    type: string
+    description: "HTTPS proxy URL"
+    default: ''
+
+  no_proxy:
+    type: string
+    description: "Exceptions to proxy configuration"
+    default: ''
+
+  elasticsearch_address:
+    type: string
+    default: 127.0.0.1
+
+  elasticsearch_port:
+    type: number
+    default: 9200
+
+  base_path:
+    type: string
+    default: ''
+
+resources:
+
+  # SOFTWARE CONFIGS
+
+  install_kibana:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      group: script
+      config: { get_file: scripts/ubuntu/1_install-kibana.sh }
+      inputs:
+        - name: VERSION
+          description: Kibana version
+
+  configure_kibana:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      group: script
+      config: { get_file: scripts/ubuntu/2_configure-kibana.sh }
+      inputs:
+        - name: ELASTICSEARCH_ADDRESS
+        - name: ELASTICSEARCH_PORT
+        - name: BASE_PATH
+
+  # SOFTWARE DEPLOYMENTS
+
+  deploy_install_kibana:
+    type: OS::Heat::SoftwareDeploymentGroup
+    properties:
+      config: { get_resource: install_kibana }
+      servers: { get_param: server_map }
+      signal_transport: HEAT_SIGNAL
+      input_values:
+        http_proxy: { get_param: http_proxy }
+        https_proxy: { get_param: https_proxy }
+        no_proxy: { get_param: no_proxy }
+        VERSION: 5.4.0
+
+  deploy_configure_kibana:
+    type: OS::Heat::SoftwareDeploymentGroup
+    properties:
+      config: { get_resource: configure_kibana }
+      servers: { get_param: server_map }
+      signal_transport: HEAT_SIGNAL
+      input_values:
+        http_proxy: { get_param: http_proxy }
+        https_proxy: { get_param: https_proxy }
+        no_proxy: { get_param: no_proxy }
+        ELASTICSEARCH_ADDRESS: { get_param: elasticsearch_address }
+        ELASTICSEARCH_PORT: 9200
+        BASE_PATH: { get_param: base_path }
+    depends_on:
+      - deploy_install_kibana
+
+outputs:
