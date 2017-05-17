@@ -1,0 +1,2 @@
+resource_registry:
+  "Evoila::Deployment::Kibana": src/deploy-kibana-centos.yaml
