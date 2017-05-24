@@ -4,6 +4,8 @@ ELASTICSEARCH_ADDRESS=${ELASTICSEARCH_ADDRESS:-127.0.0.1}
 ELASTICSEARCH_PORT=${ELASTICSEARCH_PORT:-9200}
 BASE_PATH=${BASE_PATH:-''}
 
+HOSTNAME=$(hostname -s)
+
 cat <<EOF > /etc/kibana/kibana.yml
 server.host: "0.0.0.0"
 server.basePath: "$BASE_PATH"
